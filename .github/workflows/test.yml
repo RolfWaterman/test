@@ -1,0 +1,41 @@
+name: Een Test
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  merge_group:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+# You need these permissions to publish to GitHub pages
+permissions:
+  contents: write
+  pages: write
+
+jobs:
+  build-deploy:
+    runs-on: ubuntu-latest  
+    defaults:
+      run:
+        shell: bash -l {0}
+    steps:
+      - name: Checkout our repo
+        uses: actions/checkout@v4
+      - name: Setup mamba
+        uses: conda-incubator/setup-miniconda@v3
+        with:
+          miniforge-variant: Mambaforge
+          miniforge-version: latest
+          use-mamba: true
+          auto-activate-base: true
+      - name: Install dependencies
+        run: |        
+          mamba install pandas
+          mamba install pytest pdoc black ruff
+      - name: Run style using black and ruff
+        run: |
+          black --diff --color --check .
+          ruff check .
